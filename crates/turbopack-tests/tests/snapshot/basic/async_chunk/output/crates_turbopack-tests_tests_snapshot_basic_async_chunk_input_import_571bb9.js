@@ -7,7 +7,7 @@ __turbopack_export_value__({
     "output/crates_turbopack-tests_tests_snapshot_basic_async_chunk_input_import_a29514.js",
     "output/20803_foo_index_5f9e1e.js"
   ],
-  "list": "output/crates_turbopack-tests_tests_snapshot_basic_async_chunk_input_import_a29514.js.chunk-list.json"
+  "list": "output/a587c_tests_snapshot_basic_async_chunk_input_import.js.chunk-list_e3a1b5.json"
 });
 
 })()),
