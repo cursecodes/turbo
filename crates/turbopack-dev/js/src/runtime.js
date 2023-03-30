@@ -29,7 +29,6 @@
 /** @typedef {import('../types/protocol').EcmascriptModuleEntry} EcmascriptModuleEntry */
 
 /** @typedef {import('../types/runtime').ModuleEffect} ModuleEffect */
-/** @typedef {import('../types/runtime').DevRuntimeParams} DevRuntimeParams */
 
 /** @type {Object.<ModuleId, ModuleFactory>} */
 const moduleFactories = { __proto__: null };
@@ -1292,13 +1291,6 @@ function markChunkListAsRuntime(chunkListPath) {
  * @param {ChunkRegistration} chunkRegistration
  */
 async function registerChunk([chunkPath, chunkModules, runtimeParams]) {
-  if (runtimeParams != null) {
-    registerChunkListAndMarkAsRuntime(runtimeParams.chunkListPath, [
-      chunkPath,
-      ...runtimeParams.otherChunks,
-    ]);
-  }
-
   for (const [moduleId, moduleFactory] of Object.entries(chunkModules)) {
     if (!moduleFactories[moduleId]) {
       moduleFactories[moduleId] = moduleFactory;
@@ -1311,9 +1303,3 @@ async function registerChunk([chunkPath, chunkModules, runtimeParams]) {
 
 globalThis.TURBOPACK_CHUNK_UPDATE_LISTENERS =
   globalThis.TURBOPACK_CHUNK_UPDATE_LISTENERS || [];
-
-const chunksToRegister = globalThis.TURBOPACK;
-globalThis.TURBOPACK = {
-  push: registerChunk,
-};
-chunksToRegister.forEach(registerChunk);

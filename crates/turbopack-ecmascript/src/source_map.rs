@@ -1,44 +1,46 @@
-use anyhow::Result;
+use anyhow::{bail, Result};
 use turbo_tasks::{primitives::StringVc, ValueToString, ValueToStringVc};
 use turbo_tasks_fs::File;
 use turbopack_core::{
     asset::{Asset, AssetContentVc, AssetVc},
-    chunk::Chunk,
     ident::AssetIdentVc,
     reference::{AssetReference, AssetReferenceVc},
     resolve::{ResolveResult, ResolveResultVc},
-    source_map::{GenerateSourceMap, SourceMapVc},
+    source_map::{GenerateSourceMap, GenerateSourceMapVc, SourceMapVc},
 };
 
-use super::EcmascriptChunkVc;
-
-/// Represents the source map of an ecmascript chunk.
+/// Represents the source map of an ecmascript asset.
 #[turbo_tasks::value]
-pub struct EcmascriptChunkSourceMapAsset {
-    chunk: EcmascriptChunkVc,
+pub struct SourceMapAsset {
+    asset: AssetVc,
 }
 
 #[turbo_tasks::value_impl]
-impl EcmascriptChunkSourceMapAssetVc {
+impl SourceMapAssetVc {
     #[turbo_tasks::function]
-    pub fn new(chunk: EcmascriptChunkVc) -> Self {
-        EcmascriptChunkSourceMapAsset { chunk }.cell()
+    pub fn new(asset: AssetVc) -> Self {
+        SourceMapAsset { asset }.cell()
     }
 }
 
 #[turbo_tasks::value_impl]
-impl Asset for EcmascriptChunkSourceMapAsset {
+impl Asset for SourceMapAsset {
     #[turbo_tasks::function]
     async fn ident(&self) -> Result<AssetIdentVc> {
-        // NOTE(alexkirsz) We used to include the chunk's version id in the path,
+        // NOTE(alexkirsz) We used to include the asset's version id in the path,
         // but this caused `all_assets_map` to be recomputed on every change.
-        Ok(AssetIdentVc::from_path(self.chunk.path().append(".map")))
+        Ok(AssetIdentVc::from_path(
+            self.asset.ident().path().append(".map"),
+        ))
     }
 
     #[turbo_tasks::function]
     async fn content(&self) -> Result<AssetContentVc> {
-        let sm = if let Some(sm) = *self.chunk.runtime_content().generate_source_map().await? {
-            sm
+        let Some(generate_source_map) = GenerateSourceMapVc::resolve_from(&self.asset).await? else {
+            bail!("asset does not support generating source maps")
+        };
+        let sm = if let Some(sm) = &*generate_source_map.generate_source_map().await? {
+            *sm
         } else {
             SourceMapVc::empty()
         };
@@ -47,39 +49,37 @@ impl Asset for EcmascriptChunkSourceMapAsset {
     }
 }
 
-/// A reference to a [`EcmascriptChunkSourceMapAsset`], used to inform the dev
+/// A reference to a [`SourceMapAsset`], used to inform the dev
 /// server/build system of the presence of the source map
 #[turbo_tasks::value]
-pub struct EcmascriptChunkSourceMapAssetReference {
-    chunk: EcmascriptChunkVc,
+pub struct SourceMapAssetReference {
+    asset: AssetVc,
 }
 
 #[turbo_tasks::value_impl]
-impl EcmascriptChunkSourceMapAssetReferenceVc {
+impl SourceMapAssetReferenceVc {
     #[turbo_tasks::function]
-    pub fn new(chunk: EcmascriptChunkVc) -> Self {
-        EcmascriptChunkSourceMapAssetReference { chunk }.cell()
+    pub fn new(asset: AssetVc) -> Self {
+        SourceMapAssetReference { asset }.cell()
     }
 }
 
 #[turbo_tasks::value_impl]
-impl AssetReference for EcmascriptChunkSourceMapAssetReference {
+impl AssetReference for SourceMapAssetReference {
     #[turbo_tasks::function]
     async fn resolve_reference(&self) -> Result<ResolveResultVc> {
-        let asset = EcmascriptChunkSourceMapAsset { chunk: self.chunk }
-            .cell()
-            .into();
+        let asset = SourceMapAssetVc::new(self.asset).into();
         Ok(ResolveResult::asset(asset).cell())
     }
 }
 
 #[turbo_tasks::value_impl]
-impl ValueToString for EcmascriptChunkSourceMapAssetReference {
+impl ValueToString for SourceMapAssetReference {
     #[turbo_tasks::function]
     async fn to_string(&self) -> Result<StringVc> {
         Ok(StringVc::cell(format!(
             "source maps for {}",
-            self.chunk.path().to_string().await?
+            self.asset.ident().path().to_string().await?
         )))
     }
 }

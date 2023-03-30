@@ -18,12 +18,12 @@ use turbo_tasks_fs::{to_sys_path, File, FileContent, FileSystemPathVc};
 use turbo_tasks_hash::{encode_hex, hash_xxh3_hash64};
 use turbopack_core::{
     asset::{Asset, AssetVc, AssetsSetVc},
-    chunk::{ChunkGroupVc, ChunkVc, ChunkingContextVc},
+    chunk::{ChunkGroupVc, ChunkingContextVc, EvaluatedEntriesVc, EvaluatedEntryVc},
     reference::primary_referenced_assets,
     source_map::GenerateSourceMapVc,
     virtual_asset::VirtualAssetVc,
 };
-use turbopack_ecmascript::{chunk::EcmascriptChunkPlaceablesVc, EcmascriptModuleAssetVc};
+use turbopack_ecmascript::EcmascriptModuleAssetVc;
 
 use self::{
     bootstrap::NodeJsBootstrapAsset,
@@ -114,13 +114,15 @@ async fn internal_assets_for_source_mapping(
 #[turbo_tasks::function]
 pub async fn external_asset_entrypoints(
     module: EcmascriptModuleAssetVc,
-    runtime_entries: EcmascriptChunkPlaceablesVc,
+    runtime_entries: EvaluatedEntriesVc,
     chunking_context: ChunkingContextVc,
     intermediate_output_path: FileSystemPathVc,
 ) -> Result<AssetsSetVc> {
     Ok(separate_assets(
         get_intermediate_asset(
-            module.as_evaluated_chunk(chunking_context, Some(runtime_entries)),
+            chunking_context,
+            module.into(),
+            runtime_entries,
             intermediate_output_path,
         )
         .resolve()
@@ -262,12 +264,20 @@ pub async fn get_renderer_pool(
 /// Converts a module graph into node.js executable assets
 #[turbo_tasks::function]
 pub async fn get_intermediate_asset(
-    entry_chunk: ChunkVc,
+    chunking_context: ChunkingContextVc,
+    main_entry: EvaluatedEntryVc,
+    other_entries: EvaluatedEntriesVc,
     intermediate_output_path: FileSystemPathVc,
 ) -> Result<AssetVc> {
-    let chunk_group = ChunkGroupVc::from_chunk(entry_chunk);
+    let chunk_group = ChunkGroupVc::evaluated(chunking_context, main_entry, other_entries);
     let mut hash = encode_hex(hash_xxh3_hash64(
-        entry_chunk.ident().path().to_string().await?.as_str(),
+        chunk_group
+            .entry()
+            .ident()
+            .path()
+            .to_string()
+            .await?
+            .as_str(),
     ));
     hash.push_str(".js");
     Ok(NodeJsBootstrapAsset {

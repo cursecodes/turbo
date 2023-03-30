@@ -8,7 +8,7 @@ use turbopack_core::{
     asset::{Asset, AssetContentVc, AssetVc},
     chunk::{
         availability_info::AvailabilityInfo, ChunkItem, ChunkItemVc, ChunkVc, ChunkableAsset,
-        ChunkableAssetVc, ChunkingContextVc,
+        ChunkableAssetVc, ChunkingContextVc, EvaluatedEntry, EvaluatedEntryVc,
     },
     ident::AssetIdentVc,
     reference::AssetReferencesVc,
@@ -91,6 +91,9 @@ impl EcmascriptChunkPlaceable for ProcessEnvAsset {
         EcmascriptExports::None.cell()
     }
 }
+
+#[turbo_tasks::value_impl]
+impl EvaluatedEntry for ProcessEnvAsset {}
 
 #[turbo_tasks::value]
 struct ProcessEnvChunkItem {

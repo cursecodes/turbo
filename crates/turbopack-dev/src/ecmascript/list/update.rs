@@ -5,12 +5,12 @@ use turbo_tasks::{
     primitives::{JsonValueReadRef, JsonValueVc},
     TraitRef,
 };
-
-use super::{content::ChunkListContentVc, version::ChunkListVersionVc};
-use crate::version::{
+use turbopack_core::version::{
     MergeableVersionedContent, MergeableVersionedContentVc, PartialUpdate, TotalUpdate, Update,
     UpdateVc, VersionVc, VersionedContent, VersionedContentMerger, VersionedContentsVc,
 };
+
+use super::{content::ChunkListContentVc, version::ChunkListVersionVc};
 
 /// Update of a chunk list from one version to another.
 #[derive(Serialize)]

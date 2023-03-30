@@ -14,12 +14,12 @@ use turbo_tasks::{debug::ValueDebug, NothingVc, TryJoinIterExt, TurboTasks, Valu
 use turbo_tasks_env::DotenvProcessEnvVc;
 use turbo_tasks_fs::{
     json::parse_json_with_source_context, util::sys_to_unix, DiskFileSystemVc, FileSystem,
-    FileSystemPathVc,
+    FileSystemPathReadRef, FileSystemPathVc,
 };
 use turbo_tasks_memory::MemoryBackend;
 use turbopack::{
     condition::ContextCondition,
-    ecmascript::{chunk::EcmascriptChunkPlaceablesVc, EcmascriptModuleAssetVc},
+    ecmascript::EcmascriptModuleAssetVc,
     module_options::{JsxTransformOptions, JsxTransformOptionsVc, ModuleOptionsContext},
     resolve_options_context::ResolveOptionsContext,
     transition::TransitionsByNameVc,
@@ -27,7 +27,7 @@ use turbopack::{
 };
 use turbopack_core::{
     asset::{Asset, AssetVc},
-    chunk::{availability_info::AvailabilityInfo, ChunkableAsset, ChunkableAssetVc},
+    chunk::{ChunkGroupVc, ChunkableAsset, ChunkableAssetVc, EvaluatedEntriesVc},
     compile_time_defines,
     compile_time_info::CompileTimeInfo,
     context::{AssetContext, AssetContextVc},
@@ -245,17 +245,19 @@ async fn run_test(resource: &str) -> Result<FileSystemPathVc> {
         )
     });
 
-    let chunks = modules
+    let chunk_groups = modules
         .map(|module| async move {
             if let Some(ecmascript) = EcmascriptModuleAssetVc::resolve_from(module).await? {
                 // TODO: Load runtime entries from snapshots
-                Ok(ecmascript.as_evaluated_chunk(chunking_context, runtime_entries))
-            } else if let Some(chunkable) = ChunkableAssetVc::resolve_from(module).await? {
-                Ok(chunkable.as_chunk(
+                Ok(ChunkGroupVc::evaluated(
                     chunking_context,
-                    Value::new(AvailabilityInfo::Root {
-                        current_availability_root: chunkable.into(),
-                    }),
+                    ecmascript.into(),
+                    runtime_entries.unwrap_or_else(EvaluatedEntriesVc::empty),
+                ))
+            } else if let Some(chunkable) = ChunkableAssetVc::resolve_from(module).await? {
+                Ok(ChunkGroupVc::from_chunk(
+                    chunking_context,
+                    chunkable.as_root_chunk(chunking_context),
                 ))
             } else {
                 // TODO convert into a serve-able asset
@@ -270,12 +272,15 @@ async fn run_test(resource: &str) -> Result<FileSystemPathVc> {
 
     let mut seen = HashSet::new();
     let mut queue = VecDeque::with_capacity(32);
-    for chunk in chunks {
-        queue.push_back(chunk.as_asset());
+    for chunk_group in chunk_groups {
+        for chunk in &*chunk_group.chunks().await? {
+            queue.push_back(*chunk);
+        }
     }
 
+    let output_path = path.await?;
     while let Some(asset) = queue.pop_front() {
-        walk_asset(asset, &mut seen, &mut queue)
+        walk_asset(asset, &output_path, &mut seen, &mut queue)
             .await
             .context(format!(
                 "Failed to walk asset {}",
@@ -296,6 +301,7 @@ async fn run_test(resource: &str) -> Result<FileSystemPathVc> {
 
 async fn walk_asset(
     asset: AssetVc,
+    output_path: &FileSystemPathReadRef,
     seen: &mut HashSet<FileSystemPathVc>,
     queue: &mut VecDeque<AssetVc>,
 ) -> Result<()> {
@@ -305,13 +311,17 @@ async fn walk_asset(
         return Ok(());
     }
 
-    diff(path, asset.content()).await?;
+    if path.await?.is_inside(&*output_path) {
+        // Only consider assets that should be written to disk.
+        diff(path, asset.content()).await?;
+    }
+
     queue.extend(&*all_referenced_assets(asset).await?);
 
     Ok(())
 }
 
-async fn maybe_load_env(path: FileSystemPathVc) -> Result<Option<EcmascriptChunkPlaceablesVc>> {
+async fn maybe_load_env(path: FileSystemPathVc) -> Result<Option<EvaluatedEntriesVc>> {
     let dotenv_path = path.join("input/.env");
 
     if !dotenv_path.read().await?.is_content() {
@@ -320,7 +330,5 @@ async fn maybe_load_env(path: FileSystemPathVc) -> Result<Option<EcmascriptChunk
 
     let env = DotenvProcessEnvVc::new(None, dotenv_path);
     let asset = ProcessEnvAssetVc::new(dotenv_path, env.into());
-    Ok(Some(EcmascriptChunkPlaceablesVc::cell(vec![
-        asset.as_ecmascript_chunk_placeable()
-    ])))
+    Ok(Some(EvaluatedEntriesVc::one(asset.into())))
 }
