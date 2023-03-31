@@ -4,6 +4,7 @@
   },
   "installing": "Installing Turborepo",
   "getting-started": "Getting Started",
+  "debugging": "Debugging Turborepo",
   "core-concepts": "Core Concepts",
   "reference": "API Reference",
   "ci": "CI Recipes",
