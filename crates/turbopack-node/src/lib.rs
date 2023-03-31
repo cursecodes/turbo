@@ -271,13 +271,7 @@ pub async fn get_intermediate_asset(
 ) -> Result<AssetVc> {
     let chunk_group = ChunkGroupVc::evaluated(chunking_context, main_entry, other_entries);
     let mut hash = encode_hex(hash_xxh3_hash64(
-        chunk_group
-            .entry()
-            .ident()
-            .path()
-            .to_string()
-            .await?
-            .as_str(),
+        main_entry.ident().path().to_string().await?.as_str(),
     ));
     hash.push_str(".js");
     Ok(NodeJsBootstrapAsset {

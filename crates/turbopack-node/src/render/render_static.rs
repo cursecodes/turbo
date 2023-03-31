@@ -270,13 +270,12 @@ async fn render_stream_internal(
     };
 
     let stream = generator! {
-
-    let intermediate_asset = get_intermediate_asset(
-        chunking_context,
-        module.into(),
-        runtime_entries,
-        intermediate_output_path,
-    );
+        let intermediate_asset = get_intermediate_asset(
+            chunking_context,
+            module.into(),
+            runtime_entries,
+            intermediate_output_path,
+        );
         let renderer_pool = get_renderer_pool(
             cwd,
             env,
