@@ -10,7 +10,7 @@ use turbo_tasks_bytes::{Bytes, Stream};
 use turbo_tasks_env::ProcessEnvVc;
 use turbo_tasks_fs::FileSystemPathVc;
 use turbopack_core::{
-    chunk::{ChunkingContextVc, EvaluatedEntriesVc},
+    chunk::{ChunkingContextVc, EvaluatableAssetsVc},
     error::PrettyPrintError,
 };
 use turbopack_dev_server::source::{Body, BodyError, BodyVc, ProxyResult, ProxyResultVc};
@@ -32,7 +32,7 @@ pub async fn render_proxy(
     env: ProcessEnvVc,
     path: FileSystemPathVc,
     module: EcmascriptModuleAssetVc,
-    runtime_entries: EvaluatedEntriesVc,
+    runtime_entries: EvaluatableAssetsVc,
     chunking_context: ChunkingContextVc,
     intermediate_output_path: FileSystemPathVc,
     output_root: FileSystemPathVc,
@@ -148,7 +148,7 @@ fn render_stream(
     env: ProcessEnvVc,
     path: FileSystemPathVc,
     module: EcmascriptModuleAssetVc,
-    runtime_entries: EvaluatedEntriesVc,
+    runtime_entries: EvaluatableAssetsVc,
     chunking_context: ChunkingContextVc,
     intermediate_output_path: FileSystemPathVc,
     output_root: FileSystemPathVc,
@@ -208,7 +208,7 @@ async fn render_stream_internal(
     env: ProcessEnvVc,
     path: FileSystemPathVc,
     module: EcmascriptModuleAssetVc,
-    runtime_entries: EvaluatedEntriesVc,
+    runtime_entries: EvaluatableAssetsVc,
     chunking_context: ChunkingContextVc,
     intermediate_output_path: FileSystemPathVc,
     output_root: FileSystemPathVc,

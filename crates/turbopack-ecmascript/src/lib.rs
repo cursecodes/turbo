@@ -16,7 +16,6 @@ pub mod parse;
 mod path_visitor;
 pub(crate) mod references;
 pub mod resolve;
-pub(crate) mod source_map;
 pub(crate) mod special_cases;
 pub(crate) mod transform;
 pub mod tree_shake;
@@ -54,7 +53,7 @@ use turbopack_core::{
     asset::{Asset, AssetContentVc, AssetOptionVc, AssetVc},
     chunk::{
         availability_info::AvailabilityInfo, ChunkItem, ChunkItemVc, ChunkVc, ChunkableAsset,
-        ChunkableAssetVc, ChunkingContextVc, EvaluatedEntry, EvaluatedEntryVc,
+        ChunkableAssetVc, ChunkingContextVc, EvaluatableAsset, EvaluatableAssetVc,
     },
     compile_time_info::CompileTimeInfoVc,
     context::AssetContextVc,
@@ -66,6 +65,7 @@ use turbopack_core::{
     },
 };
 
+pub use self::references::AnalyzeEcmascriptModuleResultVc;
 use self::{
     chunk::{
         placeable::EcmascriptExportsReadRef, EcmascriptChunkItemContent,
@@ -75,9 +75,6 @@ use self::{
         CodeGen, CodeGenerateableWithAvailabilityInfo, CodeGenerateableWithAvailabilityInfoVc,
     },
     parse::ParseResultVc,
-};
-pub use self::{
-    references::AnalyzeEcmascriptModuleResultVc, source_map::SourceMapAssetReferenceVc,
 };
 use crate::{
     chunk::{EcmascriptChunkPlaceable, EcmascriptChunkPlaceableVc},
@@ -316,7 +313,7 @@ impl EcmascriptChunkPlaceable for EcmascriptModuleAsset {
 }
 
 #[turbo_tasks::value_impl]
-impl EvaluatedEntry for EcmascriptModuleAsset {}
+impl EvaluatableAsset for EcmascriptModuleAsset {}
 
 #[turbo_tasks::value_impl]
 impl ResolveOrigin for EcmascriptModuleAsset {

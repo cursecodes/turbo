@@ -11,7 +11,7 @@ use turbo_tasks_env::ProcessEnvVc;
 use turbo_tasks_fs::{File, FileContent, FileSystemPathVc};
 use turbopack_core::{
     asset::{Asset, AssetContentVc},
-    chunk::{ChunkingContextVc, EvaluatedEntriesVc},
+    chunk::{ChunkingContextVc, EvaluatableAssetsVc},
     error::PrettyPrintError,
 };
 use turbopack_dev_server::{
@@ -69,7 +69,7 @@ pub async fn render_static(
     env: ProcessEnvVc,
     path: FileSystemPathVc,
     module: EcmascriptModuleAssetVc,
-    runtime_entries: EvaluatedEntriesVc,
+    runtime_entries: EvaluatableAssetsVc,
     fallback_page: DevHtmlAssetVc,
     chunking_context: ChunkingContextVc,
     intermediate_output_path: FileSystemPathVc,
@@ -194,7 +194,7 @@ fn render_stream(
     env: ProcessEnvVc,
     path: FileSystemPathVc,
     module: EcmascriptModuleAssetVc,
-    runtime_entries: EvaluatedEntriesVc,
+    runtime_entries: EvaluatableAssetsVc,
     fallback_page: DevHtmlAssetVc,
     chunking_context: ChunkingContextVc,
     intermediate_output_path: FileSystemPathVc,
@@ -254,7 +254,7 @@ async fn render_stream_internal(
     env: ProcessEnvVc,
     path: FileSystemPathVc,
     module: EcmascriptModuleAssetVc,
-    runtime_entries: EvaluatedEntriesVc,
+    runtime_entries: EvaluatableAssetsVc,
     fallback_page: DevHtmlAssetVc,
     chunking_context: ChunkingContextVc,
     intermediate_output_path: FileSystemPathVc,

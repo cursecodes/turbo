@@ -1,14 +1,18 @@
 use anyhow::Result;
+use indexmap::IndexSet;
 use turbo_tasks::{primitives::StringVc, ValueToString, ValueToStringVc};
 use turbopack_core::{
     asset::{Asset, AssetContentVc, AssetVc},
-    chunk::{ChunkingContext, ParallelChunkReference, ParallelChunkReferenceVc},
+    chunk::{Chunk, ChunkingContext, ParallelChunkReference, ParallelChunkReferenceVc},
     ident::AssetIdentVc,
+    introspect::{Introspectable, IntrospectableChildrenVc, IntrospectableVc},
     reference::AssetReferencesVc,
-    source_map::{GenerateSourceMap, GenerateSourceMapVc, OptionSourceMapVc},
+    source_map::{
+        GenerateSourceMap, GenerateSourceMapVc, OptionSourceMapVc, SourceMapAssetReferenceVc,
+    },
     version::{VersionedContent, VersionedContentVc},
 };
-use turbopack_ecmascript::{chunk::EcmascriptChunkVc, SourceMapAssetReferenceVc};
+use turbopack_ecmascript::chunk::EcmascriptChunkVc;
 
 use crate::{ecmascript::content::EcmascriptDevChunkContentVc, DevChunkingContextVc};
 
@@ -111,5 +115,42 @@ impl GenerateSourceMap for EcmascriptDevChunk {
     #[turbo_tasks::function]
     fn generate_source_map(self_vc: EcmascriptDevChunkVc) -> OptionSourceMapVc {
         self_vc.own_content().generate_source_map()
+    }
+}
+
+#[turbo_tasks::function]
+fn introspectable_type() -> StringVc {
+    StringVc::cell("dev ecmascript chunk".to_string())
+}
+
+#[turbo_tasks::function]
+fn introspectable_details() -> StringVc {
+    StringVc::cell("generates a development ecmascript chunk".to_string())
+}
+
+#[turbo_tasks::value_impl]
+impl Introspectable for EcmascriptDevChunk {
+    #[turbo_tasks::function]
+    fn ty(&self) -> StringVc {
+        introspectable_type()
+    }
+
+    #[turbo_tasks::function]
+    fn title(&self) -> StringVc {
+        self.chunk.path().to_string()
+    }
+
+    #[turbo_tasks::function]
+    fn details(&self) -> StringVc {
+        introspectable_details()
+    }
+
+    #[turbo_tasks::function]
+    async fn children(&self) -> Result<IntrospectableChildrenVc> {
+        let mut children = IndexSet::new();
+        if let Some(chunk) = IntrospectableVc::resolve_from(self.chunk).await? {
+            children.insert((StringVc::cell("chunk".to_string()), chunk));
+        }
+        Ok(IntrospectableChildrenVc::cell(children))
     }
 }

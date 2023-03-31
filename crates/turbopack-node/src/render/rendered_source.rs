@@ -5,7 +5,7 @@ use turbo_tasks_env::ProcessEnvVc;
 use turbo_tasks_fs::FileSystemPathVc;
 use turbopack_core::{
     asset::{Asset, AssetsSetVc},
-    chunk::EvaluatedEntriesVc,
+    chunk::EvaluatableAssetsVc,
     introspect::{
         asset::IntrospectableAssetVc, Introspectable, IntrospectableChildrenVc, IntrospectableVc,
     },
@@ -51,7 +51,7 @@ pub fn create_node_rendered_source(
     route_match: RouteMatcherVc,
     pathname: StringVc,
     entry: NodeEntryVc,
-    runtime_entries: EvaluatedEntriesVc,
+    runtime_entries: EvaluatableAssetsVc,
     fallback_page: DevHtmlAssetVc,
 ) -> ContentSourceVc {
     let source = NodeRenderContentSource {
@@ -87,7 +87,7 @@ pub struct NodeRenderContentSource {
     route_match: RouteMatcherVc,
     pathname: StringVc,
     entry: NodeEntryVc,
-    runtime_entries: EvaluatedEntriesVc,
+    runtime_entries: EvaluatableAssetsVc,
     fallback_page: DevHtmlAssetVc,
 }
 

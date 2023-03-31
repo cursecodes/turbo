@@ -26,8 +26,8 @@ use turbo_tasks_fs::FileSystemPathVc;
 use turbo_tasks_hash::DeterministicHash;
 
 pub use self::evaluate::{
-    EvaluateChunkingContext, EvaluateChunkingContextVc, EvaluatedEntries, EvaluatedEntriesVc,
-    EvaluatedEntry, EvaluatedEntryVc,
+    EvaluatableAsset, EvaluatableAssetVc, EvaluatableAssets, EvaluatableAssetsVc,
+    EvaluateChunkingContext, EvaluateChunkingContextVc,
 };
 use self::{availability_info::AvailabilityInfo, optimize::optimize};
 use crate::{
@@ -138,7 +138,7 @@ pub trait ChunkableAsset: Asset {
 pub struct ChunkGroup {
     chunking_context: ChunkingContextVc,
     entry: ChunkVc,
-    evaluated_entries: EvaluatedEntriesVc,
+    evaluatable_assets: EvaluatableAssetsVc,
 }
 
 #[turbo_tasks::value(transparent)]
@@ -165,7 +165,7 @@ impl ChunkGroupVc {
         Self::cell(ChunkGroup {
             chunking_context,
             entry,
-            evaluated_entries: EvaluatedEntriesVc::empty(),
+            evaluatable_assets: EvaluatableAssetsVc::empty(),
         })
     }
 
@@ -177,15 +177,15 @@ impl ChunkGroupVc {
     #[turbo_tasks::function]
     pub fn evaluated(
         chunking_context: ChunkingContextVc,
-        main_entry: EvaluatedEntryVc,
-        other_entries: EvaluatedEntriesVc,
+        main_entry: EvaluatableAssetVc,
+        other_entries: EvaluatableAssetsVc,
     ) -> Self {
         Self::cell(ChunkGroup {
             chunking_context,
             entry: main_entry.as_root_chunk(chunking_context),
             // The main entry should always be *appended* to other entries, in order to ensure
             // it's only evaluated once all other entries are evaluated.
-            evaluated_entries: other_entries.with_entry(main_entry),
+            evaluatable_assets: other_entries.with_entry(main_entry),
         })
     }
 
@@ -201,14 +201,14 @@ impl ChunkGroupVc {
     #[turbo_tasks::function]
     pub async fn chunks(self) -> Result<AssetsVc> {
         let this = self.await?;
-        let evaluated_entries = this.evaluated_entries.await?;
+        let evaluatable_assets = this.evaluatable_assets.await?;
 
-        let mut entry_chunks: HashSet<_> = evaluated_entries
+        let mut entry_chunks: HashSet<_> = evaluatable_assets
             .iter()
             .map({
                 let chunking_context = this.chunking_context;
-                move |evaluated_entry| async move {
-                    Ok(evaluated_entry
+                move |evaluatable_asset| async move {
+                    Ok(evaluatable_asset
                         .as_root_chunk(chunking_context)
                         .resolve()
                         .await?)
@@ -239,14 +239,14 @@ impl ChunkGroupVc {
             .map(|chunk| this.chunking_context.generate_chunk(*chunk))
             .collect();
 
-        if !evaluated_entries.is_empty() {
+        if !evaluatable_assets.is_empty() {
             if let Some(evaluate_chunking_context) =
                 EvaluateChunkingContextVc::resolve_from(&this.chunking_context).await?
             {
                 assets.push(evaluate_chunking_context.evaluate_chunk(
                     this.entry,
                     AssetsVc::cell(assets.clone()),
-                    this.evaluated_entries,
+                    this.evaluatable_assets,
                 ));
             }
         }

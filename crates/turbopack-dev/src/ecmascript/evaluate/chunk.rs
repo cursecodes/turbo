@@ -7,17 +7,18 @@ use turbo_tasks::{primitives::StringVc, TryJoinIterExt, Value, ValueToString, Va
 use turbo_tasks_fs::{embed_file, File, FileContent};
 use turbopack_core::{
     asset::{Asset, AssetContentVc, AssetVc, AssetsVc},
-    chunk::{ChunkVc, ChunkingContext, EvaluatedEntriesVc, ModuleIdReadRef},
+    chunk::{ChunkVc, ChunkingContext, EvaluatableAssetsVc, ModuleIdReadRef},
     code_builder::{CodeBuilder, CodeVc},
     environment::ChunkLoading,
     ident::AssetIdentVc,
     reference::AssetReferencesVc,
-    source_map::{GenerateSourceMap, GenerateSourceMapVc, OptionSourceMapVc},
+    source_map::{
+        GenerateSourceMap, GenerateSourceMapVc, OptionSourceMapVc, SourceMapAssetReferenceVc,
+    },
 };
 use turbopack_ecmascript::{
     chunk::{EcmascriptChunkPlaceable, EcmascriptChunkPlaceableVc},
     utils::StringifyJs,
-    SourceMapAssetReferenceVc,
 };
 
 use crate::{ecmascript::list::reference::ChunkListReferenceVc, DevChunkingContextVc};
@@ -30,7 +31,7 @@ pub(crate) struct EcmascriptDevEvaluateChunk {
     pub(super) chunking_context: DevChunkingContextVc,
     pub(super) entry_chunk: ChunkVc,
     pub(super) other_chunks: AssetsVc,
-    pub(super) evaluated_entries: EvaluatedEntriesVc,
+    pub(super) evaluatable_assets: EvaluatableAssetsVc,
 }
 
 #[turbo_tasks::value_impl]
@@ -41,13 +42,13 @@ impl EcmascriptDevEvaluateChunkVc {
         chunking_context: DevChunkingContextVc,
         entry_chunk: ChunkVc,
         other_chunks: AssetsVc,
-        evaluated_entries: EvaluatedEntriesVc,
+        evaluatable_assets: EvaluatableAssetsVc,
     ) -> Self {
         EcmascriptDevEvaluateChunk {
             chunking_context,
             entry_chunk,
             other_chunks,
-            evaluated_entries,
+            evaluatable_assets,
         }
         .cell()
     }
@@ -78,7 +79,7 @@ impl EcmascriptDevEvaluateChunkVc {
         }
 
         let runtime_module_ids = this
-            .evaluated_entries
+            .evaluatable_assets
             .await?
             .iter()
             .map({
@@ -208,7 +209,7 @@ impl Asset for EcmascriptDevEvaluateChunk {
         ident.add_modifier(modifier());
 
         ident.modifiers.extend(
-            self.evaluated_entries
+            self.evaluatable_assets
                 .await?
                 .iter()
                 .map(|entry| entry.ident().to_string()),

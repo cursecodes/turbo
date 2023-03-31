@@ -18,7 +18,7 @@ use turbo_tasks_fs::{to_sys_path, File, FileContent, FileSystemPathVc};
 use turbo_tasks_hash::{encode_hex, hash_xxh3_hash64};
 use turbopack_core::{
     asset::{Asset, AssetVc, AssetsSetVc},
-    chunk::{ChunkGroupVc, ChunkingContextVc, EvaluatedEntriesVc, EvaluatedEntryVc},
+    chunk::{ChunkGroupVc, ChunkingContextVc, EvaluatableAssetVc, EvaluatableAssetsVc},
     reference::primary_referenced_assets,
     source_map::GenerateSourceMapVc,
     virtual_asset::VirtualAssetVc,
@@ -114,7 +114,7 @@ async fn internal_assets_for_source_mapping(
 #[turbo_tasks::function]
 pub async fn external_asset_entrypoints(
     module: EcmascriptModuleAssetVc,
-    runtime_entries: EvaluatedEntriesVc,
+    runtime_entries: EvaluatableAssetsVc,
     chunking_context: ChunkingContextVc,
     intermediate_output_path: FileSystemPathVc,
 ) -> Result<AssetsSetVc> {
@@ -265,8 +265,8 @@ pub async fn get_renderer_pool(
 #[turbo_tasks::function]
 pub async fn get_intermediate_asset(
     chunking_context: ChunkingContextVc,
-    main_entry: EvaluatedEntryVc,
-    other_entries: EvaluatedEntriesVc,
+    main_entry: EvaluatableAssetVc,
+    other_entries: EvaluatableAssetsVc,
     intermediate_output_path: FileSystemPathVc,
 ) -> Result<AssetVc> {
     let chunk_group = ChunkGroupVc::evaluated(chunking_context, main_entry, other_entries);

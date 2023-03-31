@@ -6,7 +6,7 @@ use turbopack_core::{
     asset::{Asset, AssetContentVc, AssetVc},
     chunk::{
         availability_info::AvailabilityInfo, ChunkGroupVc, ChunkItem, ChunkItemVc, ChunkVc,
-        ChunkableAsset, ChunkableAssetVc, ChunkingContextVc, EvaluatedEntriesVc,
+        ChunkableAsset, ChunkableAssetVc, ChunkingContextVc, EvaluatableAssetsVc,
     },
     ident::AssetIdentVc,
     introspect::{
@@ -38,7 +38,7 @@ pub struct ChunkGroupFilesAsset {
     pub asset: ChunkableAssetVc,
     pub client_root: FileSystemPathVc,
     pub chunking_context: ChunkingContextVc,
-    pub runtime_entries: Option<EvaluatedEntriesVc>,
+    pub runtime_entries: Option<EvaluatableAssetsVc>,
 }
 
 #[turbo_tasks::value_impl]
@@ -53,7 +53,7 @@ impl ChunkGroupFilesAssetVc {
                     ecma.into(),
                     this.runtime_entries
                         .clone()
-                        .unwrap_or_else(EvaluatedEntriesVc::empty),
+                        .unwrap_or_else(EvaluatableAssetsVc::empty),
                 )
             } else {
                 ChunkGroupVc::from_asset(

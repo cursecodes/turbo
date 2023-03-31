@@ -1,7 +1,8 @@
 use anyhow::{bail, Result};
 use turbo_tasks::{primitives::StringVc, ValueToString, ValueToStringVc};
 use turbo_tasks_fs::File;
-use turbopack_core::{
+
+use crate::{
     asset::{Asset, AssetContentVc, AssetVc},
     ident::AssetIdentVc,
     reference::{AssetReference, AssetReferenceVc},

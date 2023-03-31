@@ -11,7 +11,7 @@ use turbopack_core::{
     asset::{Asset, AssetVc, AssetsVc},
     chunk::{
         availability_info::AvailabilityInfo, ChunkVc, ChunkableAssetVc, ChunkingContext,
-        ChunkingContextVc, EvaluateChunkingContext, EvaluateChunkingContextVc, EvaluatedEntriesVc,
+        ChunkingContextVc, EvaluatableAssetsVc, EvaluateChunkingContext, EvaluateChunkingContextVc,
     },
     environment::EnvironmentVc,
     ident::{AssetIdent, AssetIdentVc},
@@ -378,9 +378,9 @@ impl EvaluateChunkingContext for DevChunkingContext {
         self_vc: DevChunkingContextVc,
         entry_chunk: ChunkVc,
         other_chunks: AssetsVc,
-        evaluated_entries: EvaluatedEntriesVc,
+        evaluatable_assets: EvaluatableAssetsVc,
     ) -> AssetVc {
-        EcmascriptDevEvaluateChunkVc::new(self_vc, entry_chunk, other_chunks, evaluated_entries)
+        EcmascriptDevEvaluateChunkVc::new(self_vc, entry_chunk, other_chunks, evaluatable_assets)
             .into()
     }
 }

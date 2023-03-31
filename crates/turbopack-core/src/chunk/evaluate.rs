@@ -8,28 +8,28 @@ use crate::asset::{Asset, AssetVc, AssetsVc};
 /// The chunking context implementation will resolve the dynamic entry to a
 /// well-known value or trait object.
 #[turbo_tasks::value_trait]
-pub trait EvaluatedEntry: Asset + ChunkableAsset {}
+pub trait EvaluatableAsset: Asset + ChunkableAsset {}
 
 #[turbo_tasks::value(transparent)]
-pub struct EvaluatedEntries(Vec<EvaluatedEntryVc>);
+pub struct EvaluatableAssets(Vec<EvaluatableAssetVc>);
 
 #[turbo_tasks::value_impl]
-impl EvaluatedEntriesVc {
+impl EvaluatableAssetsVc {
     #[turbo_tasks::function]
-    pub fn empty() -> EvaluatedEntriesVc {
-        EvaluatedEntries(vec![]).cell()
+    pub fn empty() -> EvaluatableAssetsVc {
+        EvaluatableAssets(vec![]).cell()
     }
 
     #[turbo_tasks::function]
-    pub fn one(entry: EvaluatedEntryVc) -> EvaluatedEntriesVc {
-        EvaluatedEntries(vec![entry]).cell()
+    pub fn one(entry: EvaluatableAssetVc) -> EvaluatableAssetsVc {
+        EvaluatableAssets(vec![entry]).cell()
     }
 
     #[turbo_tasks::function]
-    pub async fn with_entry(self, entry: EvaluatedEntryVc) -> Result<EvaluatedEntriesVc> {
+    pub async fn with_entry(self, entry: EvaluatableAssetVc) -> Result<EvaluatableAssetsVc> {
         let mut entries = self.await?.clone_value();
         entries.push(entry);
-        Ok(EvaluatedEntries(entries).cell())
+        Ok(EvaluatableAssets(entries).cell())
     }
 }
 
@@ -41,6 +41,6 @@ pub trait EvaluateChunkingContext: ChunkingContext {
         &self,
         entry_chunk: ChunkVc,
         other_assets: AssetsVc,
-        evaluated_entries: EvaluatedEntriesVc,
+        evaluatable_assets: EvaluatableAssetsVc,
     ) -> AssetVc;
 }

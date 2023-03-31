@@ -27,7 +27,7 @@ use turbopack::{
 };
 use turbopack_core::{
     asset::{Asset, AssetVc},
-    chunk::{ChunkGroupVc, ChunkableAsset, ChunkableAssetVc, EvaluatedEntriesVc},
+    chunk::{ChunkGroupVc, ChunkableAsset, ChunkableAssetVc, EvaluatableAssetsVc},
     compile_time_defines,
     compile_time_info::CompileTimeInfo,
     context::{AssetContext, AssetContextVc},
@@ -252,7 +252,7 @@ async fn run_test(resource: &str) -> Result<FileSystemPathVc> {
                 Ok(ChunkGroupVc::evaluated(
                     chunking_context,
                     ecmascript.into(),
-                    runtime_entries.unwrap_or_else(EvaluatedEntriesVc::empty),
+                    runtime_entries.unwrap_or_else(EvaluatableAssetsVc::empty),
                 ))
             } else if let Some(chunkable) = ChunkableAssetVc::resolve_from(module).await? {
                 Ok(ChunkGroupVc::from_chunk(
@@ -321,7 +321,7 @@ async fn walk_asset(
     Ok(())
 }
 
-async fn maybe_load_env(path: FileSystemPathVc) -> Result<Option<EvaluatedEntriesVc>> {
+async fn maybe_load_env(path: FileSystemPathVc) -> Result<Option<EvaluatableAssetsVc>> {
     let dotenv_path = path.join("input/.env");
 
     if !dotenv_path.read().await?.is_content() {
@@ -330,5 +330,5 @@ async fn maybe_load_env(path: FileSystemPathVc) -> Result<Option<EvaluatedEntrie
 
     let env = DotenvProcessEnvVc::new(None, dotenv_path);
     let asset = ProcessEnvAssetVc::new(dotenv_path, env.into());
-    Ok(Some(EvaluatedEntriesVc::one(asset.into())))
+    Ok(Some(EvaluatableAssetsVc::one(asset.into())))
 }

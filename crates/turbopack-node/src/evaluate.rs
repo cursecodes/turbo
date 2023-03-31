@@ -24,7 +24,7 @@ use turbo_tasks_fs::{
 };
 use turbopack_core::{
     asset::{Asset, AssetVc},
-    chunk::{ChunkGroupVc, ChunkingContext, ChunkingContextVc, EvaluatedEntriesVc},
+    chunk::{ChunkGroupVc, ChunkingContext, ChunkingContextVc, EvaluatableAssetsVc},
     context::{AssetContext, AssetContextVc},
     ident::AssetIdentVc,
     issue::{Issue, IssueSeverity, IssueSeverityVc, IssueVc},
@@ -104,7 +104,7 @@ pub async fn get_evaluate_pool(
     env: ProcessEnvVc,
     context: AssetContextVc,
     chunking_context: ChunkingContextVc,
-    runtime_entries: Option<EvaluatedEntriesVc>,
+    runtime_entries: Option<EvaluatableAssetsVc>,
     additional_invalidation: CompletionVc,
     debug: bool,
 ) -> Result<NodeJsPoolVc> {
@@ -168,7 +168,7 @@ pub async fn get_evaluate_pool(
             Value::new(Default::default()),
             context.compile_time_info(),
         )
-        .as_evaluated_entry();
+        .as_evaluatable_asset();
 
         let mut entries = vec![globals_module];
         if let Some(runtime_entries) = runtime_entries {
@@ -177,7 +177,7 @@ pub async fn get_evaluate_pool(
             }
         }
 
-        EvaluatedEntriesVc::cell(entries)
+        EvaluatableAssetsVc::cell(entries)
     };
 
     let bootstrap = NodeJsBootstrapAsset {
@@ -246,7 +246,7 @@ pub fn evaluate(
     context_ident_for_issue: AssetIdentVc,
     context: AssetContextVc,
     chunking_context: ChunkingContextVc,
-    runtime_entries: Option<EvaluatedEntriesVc>,
+    runtime_entries: Option<EvaluatableAssetsVc>,
     args: Vec<JsonValueVc>,
     additional_invalidation: CompletionVc,
     debug: bool,
@@ -310,7 +310,7 @@ async fn compute_evaluate_stream(
     context_ident_for_issue: AssetIdentVc,
     context: AssetContextVc,
     chunking_context: ChunkingContextVc,
-    runtime_entries: Option<EvaluatedEntriesVc>,
+    runtime_entries: Option<EvaluatableAssetsVc>,
     args: Vec<JsonValueVc>,
     additional_invalidation: CompletionVc,
     debug: bool,

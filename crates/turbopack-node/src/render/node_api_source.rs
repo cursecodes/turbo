@@ -4,7 +4,7 @@ use turbo_tasks::{primitives::StringVc, Value};
 use turbo_tasks_env::ProcessEnvVc;
 use turbo_tasks_fs::FileSystemPathVc;
 use turbopack_core::{
-    chunk::EvaluatedEntriesVc,
+    chunk::EvaluatableAssetsVc,
     introspect::{
         asset::IntrospectableAssetVc, Introspectable, IntrospectableChildrenVc, IntrospectableVc,
     },
@@ -32,7 +32,7 @@ pub fn create_node_api_source(
     route_match: RouteMatcherVc,
     pathname: StringVc,
     entry: NodeEntryVc,
-    runtime_entries: EvaluatedEntriesVc,
+    runtime_entries: EvaluatableAssetsVc,
 ) -> ContentSourceVc {
     NodeApiContentSource {
         cwd,
@@ -63,7 +63,7 @@ pub struct NodeApiContentSource {
     pathname: StringVc,
     route_match: RouteMatcherVc,
     entry: NodeEntryVc,
-    runtime_entries: EvaluatedEntriesVc,
+    runtime_entries: EvaluatableAssetsVc,
 }
 
 #[turbo_tasks::value_impl]
