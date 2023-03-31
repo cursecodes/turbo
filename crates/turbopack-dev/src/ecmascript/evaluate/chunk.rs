@@ -133,11 +133,6 @@ impl EcmascriptDevEvaluateChunkVc {
                 ]);
                 (() => {{
                 if (!Array.isArray(globalThis.TURBOPACK)) {{
-                    globalThis.TURBOPACK.push([
-                        CHUNK_PATH,
-                        {{}},
-                        RUNTIME_PARAMS
-                    ])
                     return;
                 }}
             "#,
