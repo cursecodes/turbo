@@ -5,11 +5,6 @@
 ]);
 (() => {
 if (!Array.isArray(globalThis.TURBOPACK)) {
-    globalThis.TURBOPACK.push([
-        CHUNK_PATH,
-        {},
-        RUNTIME_PARAMS
-    ])
     return;
 }
 /* eslint-disable @next/next/no-assign-module-variable */
