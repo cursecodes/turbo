@@ -15,7 +15,6 @@ use turbo_tasks::{
 };
 use turbo_tasks_env::{ProcessEnv, ProcessEnvVc};
 use turbo_tasks_fs::{to_sys_path, File, FileContent, FileSystemPathVc};
-use turbo_tasks_hash::{encode_hex, hash_xxh3_hash64};
 use turbopack_core::{
     asset::{Asset, AssetVc, AssetsSetVc},
     chunk::{
