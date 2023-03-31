@@ -228,7 +228,6 @@ async fn render_stream_internal(
             chunking_context,
             module.into(),
             runtime_entries,
-            intermediate_output_path,
         );
         let pool = get_renderer_pool(
             cwd,

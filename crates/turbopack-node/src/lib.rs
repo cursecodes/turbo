@@ -18,7 +18,9 @@ use turbo_tasks_fs::{to_sys_path, File, FileContent, FileSystemPathVc};
 use turbo_tasks_hash::{encode_hex, hash_xxh3_hash64};
 use turbopack_core::{
     asset::{Asset, AssetVc, AssetsSetVc},
-    chunk::{ChunkGroupVc, ChunkingContextVc, EvaluatableAssetVc, EvaluatableAssetsVc},
+    chunk::{
+        ChunkGroupVc, ChunkingContext, ChunkingContextVc, EvaluatableAssetVc, EvaluatableAssetsVc,
+    },
     reference::primary_referenced_assets,
     source_map::GenerateSourceMapVc,
     virtual_asset::VirtualAssetVc,
@@ -119,14 +121,9 @@ pub async fn external_asset_entrypoints(
     intermediate_output_path: FileSystemPathVc,
 ) -> Result<AssetsSetVc> {
     Ok(separate_assets(
-        get_intermediate_asset(
-            chunking_context,
-            module.into(),
-            runtime_entries,
-            intermediate_output_path,
-        )
-        .resolve()
-        .await?,
+        get_intermediate_asset(chunking_context, module.into(), runtime_entries)
+            .resolve()
+            .await?,
         intermediate_output_path,
     )
     .strongly_consistent()
@@ -267,15 +264,10 @@ pub async fn get_intermediate_asset(
     chunking_context: ChunkingContextVc,
     main_entry: EvaluatableAssetVc,
     other_entries: EvaluatableAssetsVc,
-    intermediate_output_path: FileSystemPathVc,
 ) -> Result<AssetVc> {
     let chunk_group = ChunkGroupVc::evaluated(chunking_context, main_entry, other_entries);
-    let mut hash = encode_hex(hash_xxh3_hash64(
-        main_entry.ident().path().to_string().await?.as_str(),
-    ));
-    hash.push_str(".js");
     Ok(NodeJsBootstrapAsset {
-        path: intermediate_output_path.join(&hash),
+        path: chunking_context.chunk_path(main_entry.ident(), ".js"),
         chunk_group,
     }
     .cell()

@@ -202,7 +202,6 @@ impl Introspectable for NodeApiContentSource {
                     entry.chunking_context,
                     entry.module.into(),
                     self.runtime_entries,
-                    entry.intermediate_output_path,
                 )),
             ));
         }
