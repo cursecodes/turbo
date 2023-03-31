@@ -3,7 +3,7 @@ use indexmap::IndexSet;
 use turbo_tasks::{primitives::StringVc, ValueToString, ValueToStringVc};
 use turbopack_core::{
     asset::{Asset, AssetContentVc, AssetVc},
-    chunk::{Chunk, ChunkingContext, ParallelChunkReference, ParallelChunkReferenceVc},
+    chunk::{ChunkingContext, ParallelChunkReference, ParallelChunkReferenceVc},
     ident::AssetIdentVc,
     introspect::{Introspectable, IntrospectableChildrenVc, IntrospectableVc},
     reference::AssetReferencesVc,
@@ -136,8 +136,8 @@ impl Introspectable for EcmascriptDevChunk {
     }
 
     #[turbo_tasks::function]
-    fn title(&self) -> StringVc {
-        self.chunk.path().to_string()
+    fn title(self_vc: EcmascriptDevChunkVc) -> StringVc {
+        self_vc.ident().to_string()
     }
 
     #[turbo_tasks::function]
