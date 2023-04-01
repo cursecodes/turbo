@@ -84,7 +84,10 @@ Turborepo creates the following directories:
   `apps/my-app/.turbo/`)
 - `node_modules/.cache/turbo/`
 
-The
+Becuase the first two directories are not git-ignored by default, you may see an issue where
+you run the same task twice and not get a cache hit, because the `.turbo` directories are getting
+included as the task _inputs_, invalidating cache. To avoid this problem, you can limit your `inputs`
+configuration, or add `.turbo/` to your `.gitignore` file. We recommend the latter.
 
 [1]: ./reference/command-line-reference#verbosity
 
